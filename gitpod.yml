@@ -1,0 +1,53 @@
+# .gitpod.yml
+# 这个文件定义了 Gitpod 工作区的配置
+
+# 使用一个包含常用开发工具的最新版 Gitpod 镜像
+image: gitpod/workspace-full
+
+# 定义在工作区启动时要执行的任务
+tasks:
+  - name: "Setup Solana & Anchor"
+    # 'before' 脚本只在工作区第一次创建时运行
+    before: |
+      echo "🚀 Starting environment setup..."
+      # 安装 Solana CLI
+      sh -c "$(curl -sSfL https://release.solana.com/v1.18.15/install)"
+      # 将 Solana CLI 添加到环境变量 (对于当前和未来的终端)
+      export PATH="/home/gitpod/.local/share/solana/install/active_release/bin:$PATH"
+      echo 'export PATH="/home/gitpod/.local/share/solana/install/active_release/bin:$PATH"' >> ~/.bashrc.d/90-solana
+      # 安装 Anchor (avm) 和 Node.js (nvm)
+      curl -sSL https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.7/install.sh | bash
+      export NVM_DIR="$HOME/.nvm"
+      [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
+      nvm install --lts
+      npm install -g yarn
+      cargo install --git https://github.com/coral-xyz/anchor avm --locked --force
+      avm install latest
+      avm use latest
+      echo "✅ Environment setup complete!"
+    # 'init' 脚本在 'before' 之后运行，用于项目初始化
+    init: |
+      echo "🔧 Initializing workspace..."
+      # 验证安装版本
+      solana --version
+      rustc --version
+      anchor --version
+      node --version
+      yarn --version
+      # 设置 Solana CLI 配置为本地网络，方便开发
+      solana config set --url localhost
+      echo "🎉 Workspace is ready! You can now create a new Anchor project."
+
+# 定义工作区中需要暴露的端口
+ports:
+  # Solana 本地验证器端口
+  - port: 8899
+    onOpen: ignore
+  # Solana 交易日志端口
+  - port: 8900
+    onOpen: ignore
+  # 前端开发服务器端口 (例如 React/Vue)
+  - port: 3000
+    onOpen: open-preview
+
+
